@@ -4,3 +4,80 @@ SELECT track_name, duration FROM track WHERE duration > 3.30;
 SELECT collection_name FROM collection WHERE year_of_issue >= 2018 AND year_of_issue <= 2020;
 SELECT name FROM singer WHERE name NOT LIKE '% %';
 SELECT track_name FROM track WHERE track_name LIKE '%my%';
+
+SELECT genre_name, COUNT(name) FROM genre AS g 
+	JOIN singer_genre AS sg on (g.id = sg.genre_id) 
+	JOIN singer AS s on (sg.singer_id = s.id) 
+	GROUP BY genre_name
+;
+SELECT COUNT(track_name) FROM track t 
+	JOIN album a on (t.id_album = a.id) 
+	WHERE year_of_issue >= 2019 and year_of_issue <= 2020
+;
+
+SELECT album_name, AVG(duration) FROM album a 
+	JOIN track t ON (a.id = t.id_album) 
+	GROUP BY album_name
+;
+
+SELECT DISTINCT(name) FROM singer s 
+	JOIN singer_album sa ON s.id = sa.singer_id JOIN album a ON sa.album_id = a.id 
+	WHERE name NOT IN (SELECT name FROM singer s 
+	JOIN singer_album sa ON s.id = sa.singer_id JOIN album a ON sa.album_id = a.id  
+	WHERE year_of_issue = 2004)
+;
+
+SELECT DISTINCT collection_name FROM collection c 
+	LEFT JOIN track_collection tc ON c.id = tc.collection_id
+	LEFT JOIN track t ON tc.track_id = t.id
+	LEFT JOIN album a ON t.id_album = a.id
+	LEFT JOIN singer_album sa ON a.id = sa.album_id 
+	LEFT JOIN singer s ON sa.singer_id = s.id 
+	WHERE name LIKE '%Sum 41%'
+; 
+
+SELECT album_name FROM album a
+	LEFT JOIN singer_album sa ON a.id = sa.album_id
+	LEFT JOIN singer s ON sa.singer_id = s.id
+	LEFT JOIN singer_genre sg ON s.id = sg.singer_id
+	LEFT JOIN genre g ON sg.genre_id = g.id
+	GROUP BY album_name HAVING COUNT(distinct genre_name) > 1
+;
+
+SELECT album_name FROM album a
+	LEFT JOIN singer_album sa ON a.id = sa.album_id
+	LEFT JOIN singer s ON sa.singer_id = s.id
+	LEFT JOIN singer_genre sg ON s.id = sg.singer_id
+	LEFT JOIN genre g ON sg.genre_id = g.id
+	GROUP BY album_name HAVING COUNT(distinct genre_name) > 1
+;
+
+SELECT track_name FROM track t 
+	LEFT JOIN track_collection tc ON  t.id = tc.track_id
+	LEFT JOIN collection c ON tc.collection_id = c.id 
+	WHERE t.id NOT IN (SELECT track_id FROM track_collection tc2 )
+;
+
+SELECT name, duration FROM  singer s
+	LEFT JOIN singer_album sa ON s.id = sa.singer_id 
+	LEFT JOIN album a ON sa.album_id = a.id 
+	LEFT JOIN track t ON a.id = t.id 
+	GROUP BY name, duration 
+	HAVING duration = (SELECT min(duration) FROM track)
+;
+	
+SELECT album_name FROM album a 
+	LEFT JOIN track t ON t.id_album = a.id
+	WHERE id_album IN (
+	SELECT id_album FROM track t
+	GROUP BY id_album 
+	HAVING COUNT(t.id) = (
+	SELECT COUNT(t.id) FROM track t
+	LEFT JOIN album a ON t.id_album = a.id
+	GROUP BY album_name
+	ORDER BY COUNT
+	LIMIT 1))
+;
+        
+
+
